@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase, Booking } from "@/lib/supabase";
+import { supabase, Booking } from "../lib/supabase";
 
 export default function Dashboard() {
   const [bookings, setBookings] = useState<Booking[]>([]);
