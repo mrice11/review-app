@@ -1,0 +1,143 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #f7f6f3;
+  color: #1a1a1a;
+}
+
+.page {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 28px;
+}
+
+.header h1 {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.header p {
+  font-size: 13px;
+  color: #6b6b6b;
+  margin: 2px 0 0;
+}
+
+.card {
+  background: white;
+  border: 1px solid #e5e3dc;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.stat {
+  background: white;
+  border: 1px solid #e5e3dc;
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+
+.stat .label {
+  font-size: 12px;
+  color: #6b6b6b;
+}
+
+.stat .value {
+  font-size: 22px;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.form-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+input {
+  flex: 1;
+  padding: 9px 12px;
+  border: 1px solid #d6d3c9;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+button {
+  padding: 9px 16px;
+  border-radius: 8px;
+  border: none;
+  background: #1a1a1a;
+  color: white;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #333;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+th {
+  text-align: left;
+  font-size: 12px;
+  color: #6b6b6b;
+  font-weight: 500;
+  padding: 8px 6px;
+  border-bottom: 1px solid #e5e3dc;
+}
+
+td {
+  padding: 10px 6px;
+  border-bottom: 1px solid #f0efe9;
+}
+
+.badge {
+  font-size: 12px;
+  padding: 3px 10px;
+  border-radius: 6px;
+  display: inline-block;
+}
+
+.badge.awaiting {
+  background: #f0efe9;
+  color: #6b6b6b;
+}
+
+.badge.sent {
+  background: #e6f1fb;
+  color: #185fa5;
+}
+
+.badge.reviewed {
+  background: #eaf3de;
+  color: #3b6d11;
+}
+
+.badge.flagged {
+  background: #fcebeb;
+  color: #a32d2d;
+}
