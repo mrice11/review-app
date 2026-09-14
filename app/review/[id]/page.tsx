@@ -1,19 +1,41 @@
 "use client";
 
-import { useState } from "react";
-
-// Replace with your actual Google review link (see README.md step 5).
-const GOOGLE_REVIEW_LINK = "https://g.page/r/REPLACE_ME/review";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
 
 export default function ReviewPage({ params }: { params: { id: string } }) {
-  const [step, setStep] = useState<"ask" | "happy" | "unhappy" | "done">(
-    "ask"
-  );
+  const [step, setStep] = useState
+    "loading" | "ask" | "happy" | "unhappy" | "done"
+  >("loading");
   const [feedback, setFeedback] = useState("");
+  const [reviewLink, setReviewLink] = useState("");
+  const [businessName, setBusinessName] = useState("");
 
-  async function respond(status: "happy" | "unhappy") {
-    setStep(status);
-  }
+  useEffect(() => {
+    async function load() {
+      const { data: booking } = await supabase
+        .from("bookings")
+        .select("business_id")
+        .eq("id", params.id)
+        .single();
+
+      if (!booking) {
+        setStep("ask");
+        return;
+      }
+
+      const { data: business } = await supabase
+        .from("businesses")
+        .select("business_name, google_review_link")
+        .eq("id", booking.business_id)
+        .single();
+
+      setBusinessName(business?.business_name ?? "us");
+      setReviewLink(business?.google_review_link ?? "#");
+      setStep("ask");
+    }
+    load();
+  }, [params.id]);
 
   async function sendFeedback() {
     await fetch("/api/respond", {
@@ -24,22 +46,30 @@ export default function ReviewPage({ params }: { params: { id: string } }) {
     setStep("done");
   }
 
+  if (step === "loading") {
+    return (
+      <div className="page" style={{ maxWidth: 420 }}>
+        <p>Loading...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="page" style={{ maxWidth: 420 }}>
       {step === "ask" && (
         <div className="card">
-          <p>Thanks for renting from us! How did everything go?</p>
+          <p>Thanks for renting from {businessName}! How did everything go?</p>
           <div className="form-row">
-            <button onClick={() => respond("happy")}>Great</button>
-            <button onClick={() => respond("unhappy")}>Not great</button>
+            <button onClick={() => setStep("happy")}>Great</button>
+            <button onClick={() => setStep("unhappy")}>Not great</button>
           </div>
         </div>
       )}
 
       {step === "happy" && (
         <div className="card">
-          <p>Glad to hear it! Mind leaving us a quick review?</p>
-          <a href={GOOGLE_REVIEW_LINK} target="_blank" rel="noreferrer">
+          <p>Glad to hear it! Mind leaving a quick review?</p>
+          <a href={reviewLink} target="_blank" rel="noreferrer">
             <button>Leave a Google review</button>
           </a>
         </div>
@@ -69,7 +99,7 @@ export default function ReviewPage({ params }: { params: { id: string } }) {
 
       {step === "done" && (
         <div className="card">
-          <p>Thanks for letting us know — we'll follow up.</p>
+          <p>Thanks for letting us know — we&apos;ll follow up.</p>
         </div>
       )}
     </div>
