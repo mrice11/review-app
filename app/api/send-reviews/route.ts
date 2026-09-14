@@ -9,10 +9,9 @@ const supabase = createClient(
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-// This route is called automatically once a day by Vercel Cron
-// (configured in vercel.json). It finds bookings whose event was
-// yesterday and still says "awaiting", emails the customer, and
-// marks the booking as "sent".
+// Runs once a day via Vercel Cron (see vercel.json). Finds every
+// booking, across every business, whose event was yesterday and
+// still says "awaiting", emails the customer, and marks it "sent".
 export async function GET() {
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
@@ -20,18 +19,21 @@ export async function GET() {
 
   const { data: bookings } = await supabase
     .from("bookings")
-    .select("*")
+    .select("*, businesses(business_name)")
     .eq("event_date", dateStr)
     .eq("status", "awaiting");
 
+  let sentCount = 0;
+
   for (const booking of bookings ?? []) {
     const reviewUrl = `${process.env.NEXT_PUBLIC_APP_URL}/review/${booking.id}`;
+    const businessName = booking.businesses?.business_name ?? "Us";
 
     await resend.emails.send({
-      from: "Miller's Event Rentals <onboarding@resend.dev>",
+      from: `${businessName} <onboarding@resend.dev>`,
       to: booking.customer_email,
       subject: "How did everything go?",
-      html: `<p>Hey ${booking.customer_name}, thanks for renting from us! How did everything go?</p>
+      html: `<p>Hey ${booking.customer_name}, thanks for renting from ${businessName}! How did everything go?</p>
              <p><a href="${reviewUrl}">Let us know here</a></p>`,
     });
 
@@ -39,7 +41,9 @@ export async function GET() {
       .from("bookings")
       .update({ status: "sent" })
       .eq("id", booking.id);
+
+    sentCount++;
   }
 
-  return NextResponse.json({ sent: bookings?.length ?? 0 });
+  return NextResponse.json({ sent: sentCount });
 }
