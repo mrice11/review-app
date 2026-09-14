@@ -9,9 +9,19 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export type Booking = {
   id: string;
+  business_id: string;
   customer_name: string;
   customer_email: string;
   event_date: string;
   status: "awaiting" | "sent" | "reviewed" | "flagged";
+  feedback?: string;
+  created_at: string;
+};
+
+export type Business = {
+  id: string;
+  business_name: string;
+  google_review_link: string;
+  webhook_token: string;
   created_at: string;
 };
