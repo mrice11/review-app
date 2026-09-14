@@ -1,33 +1,58 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase, Booking } from "../lib/supabase";
+import { useRouter } from "next/navigation";
+import { supabase, Booking } from "@/lib/supabase";
 
 export default function Dashboard() {
+  const router = useRouter();
+  const [userId, setUserId] = useState<string | null>(null);
+  const [businessName, setBusinessName] = useState("");
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [date, setDate] = useState("");
   const [loading, setLoading] = useState(true);
 
-  async function loadBookings() {
-    const { data } = await supabase
+  async function loadEverything() {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (!session) {
+      router.push("/login");
+      return;
+    }
+
+    setUserId(session.user.id);
+
+    const { data: business } = await supabase
+      .from("businesses")
+      .select("business_name")
+      .eq("id", session.user.id)
+      .single();
+
+    setBusinessName(business?.business_name ?? "Your business");
+
+    const { data: bookingRows } = await supabase
       .from("bookings")
       .select("*")
       .order("created_at", { ascending: false });
-    setBookings(data ?? []);
+
+    setBookings(bookingRows ?? []);
     setLoading(false);
   }
 
   useEffect(() => {
-    loadBookings();
+    loadEverything();
   }, []);
 
   async function addBooking(e: React.FormEvent) {
     e.preventDefault();
-    if (!name || !email || !date) return;
+    if (!name || !email || !date || !userId) return;
 
     await supabase.from("bookings").insert({
+      business_id: userId,
       customer_name: name,
       customer_email: email,
       event_date: date,
@@ -37,7 +62,20 @@ export default function Dashboard() {
     setName("");
     setEmail("");
     setDate("");
-    loadBookings();
+    loadEverything();
+  }
+
+  async function signOut() {
+    await supabase.auth.signOut();
+    router.push("/login");
+  }
+
+  if (loading) {
+    return (
+      <div className="page">
+        <p>Loading...</p>
+      </div>
+    );
   }
 
   const reviewed = bookings.filter((b) => b.status === "reviewed").length;
@@ -50,8 +88,21 @@ export default function Dashboard() {
     <div className="page">
       <div className="header">
         <div>
-          <h1>Review requests</h1>
+          <h1>{businessName}</h1>
           <p>Add a booking, we handle the rest.</p>
+        </div>
+        <div style={{ display: "flex", gap: 10 }}>
+          <a href="/settings">
+            <button style={{ background: "#e5e3dc", color: "#1a1a1a" }}>
+              Settings
+            </button>
+          </a>
+          <button
+            onClick={signOut}
+            style={{ background: "#e5e3dc", color: "#1a1a1a" }}
+          >
+            Log out
+          </button>
         </div>
       </div>
 
@@ -95,9 +146,7 @@ export default function Dashboard() {
       </div>
 
       <div className="card">
-        {loading ? (
-          <p>Loading...</p>
-        ) : bookings.length === 0 ? (
+        {bookings.length === 0 ? (
           <p>No bookings yet. Add your first one above.</p>
         ) : (
           <table>
